@@ -4,9 +4,9 @@ export type Options = {
 
 export type Next<Output> = (err: State, val?: Output) => void;
 
-export type SyncPromise = (resolve: (val: any) => void, reject: (val: any) => void) => void;
+export type SyncPromise<T = any> = (resolve: (val: T) => void, reject: (val: any) => void) => void;
 
-export type Callback<Input, Output> = (val: Input) => Output | Promise<Output> | SyncPromise;
+export type Callback<Input, Output> = (val: Input) => Output | Promise<Output> | SyncPromise<Output>;
 
 export type Runner<Input, Output> = Callback<Input, Output> | Process<Input, Output>;
 

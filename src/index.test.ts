@@ -1,4 +1,4 @@
-import { Process, State } from "./";
+import { Process, State, SyncPromise } from "./";
 
 describe("PROCESS", () => {
   test("should create a process", () => {
@@ -116,11 +116,13 @@ describe("PROCESS", () => {
 
     let callbackCount = 0;
     const process = new Process()
+      .then(
+        (): SyncPromise<number> => {
+          callbackCount++;
+          return resolve => setTimeout(resolve, 10);
+        }
+      )
       .then(() => {
-        callbackCount++;
-        return resolve => setTimeout(resolve, 10);
-      })
-      .then(val => {
         callbackCount++;
       });
 
