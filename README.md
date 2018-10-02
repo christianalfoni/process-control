@@ -4,10 +4,10 @@ Set up asynchronous processes that can be started, restarted, stopped and dispos
 
 This project was created to manage complex rendering logic. It allows you to define several processes that can at any time be
 started, stopped, restarted or disposed. When you stop a process its current step will finish, but the next step will not
-execute. Think of it as using a promise that can be stopped, restarted and disposed (can not be started anymore).
+execute. Think of it as using a promise which by default executes synchronously and can be stopped, restarted and disposed (can not be started anymore).
 
 Big shoutout to [Normatic](http://www.normatic.no/) for open sourcing this tool as a thanks to the open source community for its
-contributions, allow Normatic to build great experiences for their customers!
+contributions, allowing Normatic to build great experiences for their customers!
 
 ```js
 import { Process } from "process-control";
