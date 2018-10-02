@@ -1,0 +1,27 @@
+{
+  "name": "process-control",
+  "version": "1.0.0",
+  "description": "Control async processes",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "async",
+    "process",
+    "control"
+  ],
+  "author": "christianalfoni",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^23.3.2",
+    "eslint": "^5.6.0",
+    "eslint-config-prettier": "^3.1.0",
+    "jest": "^23.6.0",
+    "prettier": "^1.14.3",
+    "rollup": "^0.66.2",
+    "ts-jest": "^23.10.2",
+    "typescript": "^3.1.1"
+  }
+}
