@@ -4,11 +4,18 @@ export type Options = {
 
 export type Next<Output> = (err: State, val?: Output) => void;
 
-export type SyncPromise<T = any> = (resolve: (val: T) => void, reject: (val: any) => void) => void;
+export type SyncPromise<T = any> = (
+  resolve: (val: T) => void,
+  reject: (val: any) => void
+) => void;
 
-export type Callback<Input, Output> = (val: Input) => Output | Promise<Output> | SyncPromise<Output>;
+export type Callback<Input, Output> = (
+  val: Input
+) => Output | Promise<Output> | SyncPromise<Output>;
 
-export type Runner<Input, Output> = Callback<Input, Output> | Process<Input, Output>;
+export type Runner<Input, Output> =
+  | Callback<Input, Output>
+  | Process<Input, Output>;
 
 export enum State {
   IDLE = "IDLE",
@@ -24,7 +31,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   private _run: Runner<any, any> | Runner<any, any>[];
   private _currentRun: Promise<ThisInput>;
   state: State = State.IDLE;
-  constructor(options: Options = { dispose: false }, parent?: Process<any, any>) {
+  constructor(
+    options: Options = { dispose: false },
+    parent?: Process<any, any>
+  ) {
     this._options = options;
     this._parent = parent;
   }
@@ -137,7 +147,7 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
       };
 
       if (this._parent) {
-        this._parent.run(newValue, proceed);
+        this._parent.run(newValue, proceed).catch(reject);
       } else {
         proceed(null, newValue);
       }
@@ -151,7 +161,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   all(runners: Runner<ThisInput, any>[]): Process<InitialInput, ThisInput> {
     this._run = runners;
 
-    return (this._child = new Process<InitialInput, ThisInput>(this._options, this));
+    return (this._child = new Process<InitialInput, ThisInput>(
+      this._options,
+      this
+    ));
   }
   start(initialValue?: InitialInput): Promise<ThisInput>;
   start(initialValue?): Promise<ThisInput> {
