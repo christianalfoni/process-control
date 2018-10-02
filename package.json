@@ -4,6 +4,7 @@
   "description": "Control async processes",
   "main": "dist/index.js",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "tsc",
     "test": "jest"
   },
