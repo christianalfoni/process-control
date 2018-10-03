@@ -5,25 +5,16 @@ describe("PROCESS", () => {
     expect(new Process());
   });
   test("should run callback in THEN", () => {
-    let hasRunCallback;
-    const process = new Process<string>().then(() => {
-      hasRunCallback = true;
-    });
+    const cb = jest.fn();
+    const process = new Process<string>().then(cb);
     process.start();
-    expect(hasRunCallback);
+    expect(cb).toHaveBeenCalled();
   });
   test("should chain process", () => {
-    let callbackCount = 0;
-    const process = new Process()
-      .then(() => {
-        callbackCount++;
-      })
-      .then(() => {
-        callbackCount++;
-      });
-
+    const cb = jest.fn();
+    const process = new Process().then(cb).then(cb);
     return process.start().then(() => {
-      expect(callbackCount).toBe(2);
+      expect(cb).toHaveBeenCalledTimes(2);
     });
   });
   test("should pass returned value", () => {
@@ -91,18 +82,16 @@ describe("PROCESS", () => {
   test("should be able to stop process", () => {
     expect.assertions(2);
 
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .then(() => {
-        callbackCount++;
+        cb();
         return new Promise(resolve => setTimeout(resolve, 10));
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     const test = process.start().catch(reason => {
-      expect(callbackCount).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       expect(reason).toBe(State.STOPPED);
     });
 
@@ -114,43 +103,39 @@ describe("PROCESS", () => {
   test("should be able to stop process", () => {
     expect.assertions(4);
 
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .then(
         (): SyncPromise<number> => {
-          callbackCount++;
+          cb();
           return resolve => setTimeout(resolve, 10);
         }
       )
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     process.start().catch(reason => {
-      expect(callbackCount).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       expect(reason).toBe(State.STOPPED);
     });
 
     return process.stop().then(() => {
-      expect(callbackCount).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       expect(process.state).toBe(State.IDLE);
     });
   });
   test("should be able to start a stopped process", () => {
     expect.assertions(3);
 
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .then(() => {
-        callbackCount++;
+        cb();
         return resolve => setTimeout(resolve, 10);
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     process.start().catch(reason => {
-      expect(callbackCount).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       expect(reason).toBe(State.STOPPED);
     });
 
@@ -162,25 +147,23 @@ describe("PROCESS", () => {
         return process.start();
       })
       .then(() => {
-        expect(callbackCount).toBe(3);
+        expect(cb).toHaveBeenCalledTimes(3);
       });
   });
   test("should be bable to restart a process", () => {
     expect.assertions(3);
 
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .then(() => {
-        callbackCount++;
+        cb();
         return resolve => setTimeout(resolve, 10);
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     return Promise.all([
       process.start().catch(reason => {
-        expect(callbackCount).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
         expect(reason).toBe(State.STOPPED);
       }),
       Promise.resolve()
@@ -188,26 +171,24 @@ describe("PROCESS", () => {
           return process.restart();
         })
         .then(() => {
-          expect(callbackCount).toBe(3);
+          expect(cb).toHaveBeenCalledTimes(3);
         })
     ]);
   });
   test("should be able to dispose a process", () => {
     expect.assertions(3);
 
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .then(() => {
-        callbackCount++;
+        cb();
         return resolve => setTimeout(resolve, 10);
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     return Promise.all([
       process.start().catch(reason => {
-        expect(callbackCount).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
         expect(reason).toBe(State.STOPPED);
       }),
       Promise.resolve()
@@ -218,102 +199,82 @@ describe("PROCESS", () => {
           return process.start();
         })
         .catch(() => {
-          expect(callbackCount).toBe(1);
+          expect(cb).toHaveBeenCalledTimes(1);
         })
     ]);
   });
   test("should be able to merge multiple promises", () => {
-    let callbackCount = 0;
+    const cb = jest.fn();
     const process = new Process()
       .all([
         () => {
-          callbackCount++;
+          cb();
           return resolve => setTimeout(resolve, 10);
         },
-        () => {
-          callbackCount++;
-        }
+        cb
       ])
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     return process.start().then(() => {
-      expect(callbackCount).toBe(3);
+      expect(cb).toBeCalledTimes(3);
     });
   });
 
   test("should be able to merge processes", () => {
-    let callbackCount = 0;
+    const cb = jest.fn();
     const processB = new Process().then(() => {
-      callbackCount++;
+      cb();
       return resolve => setTimeout(resolve, 10);
     });
     const process = new Process()
       .all([
         processB,
-        () => {
-          callbackCount++;
-        }
+        cb
       ])
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
 
     return process.start().then(() => {
-      expect(callbackCount).toBe(3);
+      expect(cb).toHaveBeenCalledTimes(3);
     });
   });
   test("should stop merged processes", () => {
-    let callbackCount = 0;
+    const cb = jest.fn();
     const processB = new Process()
       .then(() => {
         return resolve => setTimeout(resolve, 10);
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
     const process = new Process()
       .all([
         processB,
-        () => {
-          callbackCount++;
-        }
+        cb
       ])
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
     setTimeout(() => process.stop(), 0);
     return process.start().catch(reason => {
-      expect(callbackCount).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       expect(reason).toBe(State.STOPPED);
     });
   });
   test("should be able to automatically dispose", () => {
-    let callbackCount = 0;
+    const cb = jest.fn();
     const processB = new Process({
       dispose: true
     })
       .then(() => {
         return resolve => setTimeout(resolve, 10);
       })
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
     const process = new Process({
       dispose: true
     })
       .all([
         processB,
-        () => {
-          callbackCount++;
-        }
+        cb
       ])
-      .then(() => {
-        callbackCount++;
-      });
+      .then(cb);
     return process.start().then(() => {
-      expect(callbackCount).toBe(3);
+      expect(cb).toHaveBeenCalledTimes(3);
       console.log("checking disposed");
       expect(process.state).toBe(State.DISPOSED);
     });
