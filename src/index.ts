@@ -234,7 +234,7 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   }
   dispose() {
     if (this.state === State.DISPOSED) {
-      Promise.resolve();
+      return Promise.resolve();
     }
 
     return this.stop()
