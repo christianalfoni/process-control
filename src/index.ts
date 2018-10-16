@@ -169,7 +169,7 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   start(initialValue?: InitialInput): Promise<ThisInput>;
   start(initialValue?): Promise<ThisInput> {
     if (this.state === State.DISPOSED) {
-      throw State.DISPOSED;
+      return Promise.reject(State.DISPOSED);
     }
 
     this.state === State.RUNNING;
