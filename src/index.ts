@@ -227,7 +227,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   }
   restart(initialValue?: InitialInput): Promise<ThisInput>;
   restart(initialValue?): Promise<ThisInput> {
-    return this._parent.stop().then(() => this.start(initialValue));
+    return this._parent
+      .stop()
+      .then(() => this.start(initialValue))
+      .catch(() => this.start(initialValue));
   }
   dispose() {
     return this.stop()
