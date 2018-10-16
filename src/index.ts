@@ -233,6 +233,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
       .catch(() => this.start(initialValue));
   }
   dispose() {
+    if (this.state === State.DISPOSED) {
+      Promise.resolve();
+    }
+
     return this.stop()
       .then(() => {
         this.state = State.DISPOSED;
