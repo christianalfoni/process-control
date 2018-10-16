@@ -58,3 +58,5 @@ myProcess.dispose();
 */
 myProcess.state;
 ```
+
+**NB!** Be careful composing one process into multiple other processes. As one process might try to stop the composed process while the other expects it to do its work!

@@ -47,7 +47,7 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
           return;
         }
 
-        if (this.state === State.STOPPED) {
+        if (this.state === State.STOPPED || this.state === State.DISPOSED) {
           reject(State.STOPPED);
           next(State.STOPPED);
           return;
@@ -107,7 +107,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
         if (returnedValue instanceof Promise) {
           returnedValue
             .then(val => {
-              if (this.state === State.STOPPED) {
+              if (
+                this.state === State.STOPPED ||
+                this.state === State.DISPOSED
+              ) {
                 reject(State.STOPPED);
                 next(State.STOPPED);
                 return;
@@ -116,11 +119,17 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
               resolve(val);
               next(null, val);
             })
-            .catch(next);
+            .catch(err => {
+              reject(err);
+              next(err);
+            });
         } else if (typeof returnedValue === "function") {
           returnedValue(
             resolvedValue => {
-              if (this.state === State.STOPPED) {
+              if (
+                this.state === State.STOPPED ||
+                this.state === State.DISPOSED
+              ) {
                 reject(State.STOPPED);
                 next(State.STOPPED);
                 return;
@@ -130,7 +139,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
               next(null, resolvedValue);
             },
             rejectedValue => {
-              if (this.state === State.STOPPED) {
+              if (
+                this.state === State.STOPPED ||
+                this.state === State.DISPOSED
+              ) {
                 reject(State.STOPPED);
                 next(State.STOPPED);
                 return;
@@ -153,6 +165,13 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
       }
     }));
   }
+  private setState(state: State) {
+    if (this.state === State.DISPOSED) {
+      return;
+    }
+
+    this.state = state;
+  }
   then<T>(runner: Runner<ThisInput, T>): Process<InitialInput, T> {
     this._run = runner;
 
@@ -169,21 +188,25 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
   start(initialValue?: InitialInput): Promise<ThisInput>;
   start(initialValue?): Promise<ThisInput> {
     if (this.state === State.DISPOSED) {
-      return Promise.reject(State.DISPOSED);
+      return Promise.resolve(null);
     }
 
     this.state === State.RUNNING;
 
     return this.run(initialValue, () => {
       if (this._options.dispose) {
-        this.state = State.DISPOSED;
+        this.setState(State.DISPOSED);
       } else {
-        this.state = State.IDLE;
+        this.setState(State.IDLE);
       }
     });
   }
   stop() {
-    this.state = State.STOPPED;
+    if (this.state === State.DISPOSED || this.state === State.STOPPED) {
+      return Promise.resolve();
+    }
+
+    this.setState(State.STOPPED);
 
     let stop: Promise<any> = Promise.resolve();
 
@@ -212,23 +235,22 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
       ? this._currentRun
           .then(() => stop)
           .then(() => {
-            this.state = State.IDLE;
+            this.setState(State.IDLE);
           })
           .catch(() => {
-            this.state = State.IDLE;
+            this.setState(State.IDLE);
           })
       : stop
           .then(() => {
-            this.state = State.IDLE;
+            this.setState(State.IDLE);
           })
           .catch(() => {
-            this.state = State.IDLE;
+            this.setState(State.IDLE);
           });
   }
   restart(initialValue?: InitialInput): Promise<ThisInput>;
   restart(initialValue?): Promise<ThisInput> {
-    return this._parent
-      .stop()
+    return this.stop()
       .then(() => this.start(initialValue))
       .catch(() => this.start(initialValue));
   }
@@ -239,10 +261,10 @@ export class Process<InitialInput = any, ThisInput = InitialInput> {
 
     return this.stop()
       .then(() => {
-        this.state = State.DISPOSED;
+        this.setState(State.DISPOSED);
       })
       .catch(() => {
-        this.state = State.DISPOSED;
+        this.setState(State.DISPOSED);
       });
   }
 }
